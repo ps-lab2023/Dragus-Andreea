@@ -41,6 +41,9 @@ import static org.mockito.Mockito.never;
 public class AppointmentServiceTest {
     @Mock
     private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private ClientService clientService;
     @InjectMocks
     private AppointmentServiceImpl appointmentService;
 
@@ -50,18 +53,21 @@ public class AppointmentServiceTest {
     }
 
     @Test
-    public void givenAppointmentObject_whenAddValidAppointment_thenReturnAppointmentObject()  {
+    public void givenAppointmentObject_whenAddValidAppointment_thenReturnAppointmentObject() throws UserNotFoundException, ClientNotFoundException, DataBaseFailException, InvalidClientException, InvalidUserException {
         Appointment appointment = TestDataBuilder.buildValidAppointment1();
 
         try {
-            given(appointmentRepository.findByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime()))
+            given(appointmentRepository.findByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime()))
                     .willReturn(Optional.empty());
 
-            given(appointmentRepository.findByClientAndDateTime(appointment.getClient(), appointment.getDateTime()))
+            given(appointmentRepository.findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime()))
                     .willReturn(Optional.empty());
 
             given(appointmentRepository.saveIfValid(appointment))
                     .willReturn(Optional.of(appointment));
+
+            given(clientService.updateClient(appointment.getClient()))
+                    .willReturn(appointment.getClient());
 
             Assertions.assertDoesNotThrow(() -> appointmentService.addAppointment(appointment));
 
@@ -70,11 +76,11 @@ public class AppointmentServiceTest {
 
             then(appointmentRepository)
                     .should()
-                    .findByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime());
+                    .findByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime());
 
             then(appointmentRepository)
                     .should()
-                    .findByClientAndDateTime(appointment.getClient(), appointment.getDateTime());
+                    .findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime());
 
             then(appointmentRepository)
                     .should()
@@ -91,10 +97,10 @@ public class AppointmentServiceTest {
         Appointment appointment = TestDataBuilder.buildValidAppointment1();
         Appointment existingAppointmentOnDateTimeEmployee = TestDataBuilder.buildValidAppointment4();
 
-        given(appointmentRepository.findByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime()))
+        given(appointmentRepository.findByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime()))
                 .willReturn(Optional.of(existingAppointmentOnDateTimeEmployee));
 
-        given(appointmentRepository.findByClientAndDateTime(appointment.getClient(), appointment.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime()))
                 .willReturn(Optional.empty());
 
         given(appointmentRepository.saveIfValid(appointment))
@@ -107,11 +113,11 @@ public class AppointmentServiceTest {
 
         then(appointmentRepository)
                 .should()
-                .findByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime());
+                .findByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime());
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(appointment.getClient(), appointment.getDateTime());
+                .findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime());
 
         then(appointmentRepository)
                 .should(never())
@@ -123,10 +129,10 @@ public class AppointmentServiceTest {
     public void givenAppointmentObject_whenAddInvalidAppointmentTime_thenThrowException() throws InvalidAppointmentException {
         Appointment invalidAppointmentTime = TestDataBuilder.buildInvalidAppointmentTime();
 
-        given(appointmentRepository.findByEmployeeAndDateTime(invalidAppointmentTime.getEmployee(), invalidAppointmentTime.getDateTime()))
+        given(appointmentRepository.findByEmployeeNameAndDateTime(invalidAppointmentTime.getEmployee().getName(), invalidAppointmentTime.getDateTime()))
                 .willReturn(Optional.empty());
 
-        given(appointmentRepository.findByClientAndDateTime(invalidAppointmentTime.getClient(), invalidAppointmentTime.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(invalidAppointmentTime.getClient().getName(), invalidAppointmentTime.getDateTime()))
                 .willReturn(Optional.empty());
 
         willThrow(new InvalidAppointmentException("Time outside the work schedule"))
@@ -140,11 +146,11 @@ public class AppointmentServiceTest {
 
         then(appointmentRepository)
                 .should()
-                .findByEmployeeAndDateTime(invalidAppointmentTime.getEmployee(), invalidAppointmentTime.getDateTime());
+                .findByEmployeeNameAndDateTime(invalidAppointmentTime.getEmployee().getName(), invalidAppointmentTime.getDateTime());
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(invalidAppointmentTime.getClient(), invalidAppointmentTime.getDateTime());
+                .findByClientNameAndDateTime(invalidAppointmentTime.getClient().getName(), invalidAppointmentTime.getDateTime());
 
         then(appointmentRepository)
                 .should()
@@ -155,10 +161,10 @@ public class AppointmentServiceTest {
     public void givenAppointmentObject_whenAddInvalidAppointmentPastDate_thenThrowException() throws InvalidAppointmentException {
         Appointment invalidAppointmentPastDate = TestDataBuilder.buildInvalidAppointmentPastDate();
 
-        given(appointmentRepository.findByEmployeeAndDateTime(invalidAppointmentPastDate.getEmployee(), invalidAppointmentPastDate.getDateTime()))
+        given(appointmentRepository.findByEmployeeNameAndDateTime(invalidAppointmentPastDate.getEmployee().getName(), invalidAppointmentPastDate.getDateTime()))
                 .willReturn(Optional.empty());
 
-        given(appointmentRepository.findByClientAndDateTime(invalidAppointmentPastDate.getClient(), invalidAppointmentPastDate.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(invalidAppointmentPastDate.getClient().getName(), invalidAppointmentPastDate.getDateTime()))
                 .willReturn(Optional.empty());
 
         willThrow(new InvalidAppointmentException("Past Date"))
@@ -172,11 +178,11 @@ public class AppointmentServiceTest {
 
         then(appointmentRepository)
                 .should()
-                .findByEmployeeAndDateTime(invalidAppointmentPastDate.getEmployee(), invalidAppointmentPastDate.getDateTime());
+                .findByEmployeeNameAndDateTime(invalidAppointmentPastDate.getEmployee().getName(), invalidAppointmentPastDate.getDateTime());
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(invalidAppointmentPastDate.getClient(), invalidAppointmentPastDate.getDateTime());
+                .findByClientNameAndDateTime(invalidAppointmentPastDate.getClient().getName(), invalidAppointmentPastDate.getDateTime());
 
         then(appointmentRepository)
                 .should()
@@ -187,10 +193,10 @@ public class AppointmentServiceTest {
     public void givenAppointmentObject_whenAddInvalidAppointmentNotWorkingDay_thenThrowException() throws InvalidAppointmentException {
         Appointment invalidAppointmentNotWorkingDay = TestDataBuilder.buildInvalidAppointmentNotWorkingDate();
 
-        given(appointmentRepository.findByEmployeeAndDateTime(invalidAppointmentNotWorkingDay.getEmployee(), invalidAppointmentNotWorkingDay.getDateTime()))
+        given(appointmentRepository.findByEmployeeNameAndDateTime(invalidAppointmentNotWorkingDay.getEmployee().getName(), invalidAppointmentNotWorkingDay.getDateTime()))
                 .willReturn(Optional.empty());
 
-        given(appointmentRepository.findByClientAndDateTime(invalidAppointmentNotWorkingDay.getClient(), invalidAppointmentNotWorkingDay.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(invalidAppointmentNotWorkingDay.getClient().getName(), invalidAppointmentNotWorkingDay.getDateTime()))
                 .willReturn(Optional.empty());
 
         willThrow(new InvalidAppointmentException("Sunday - Not working day"))
@@ -204,11 +210,11 @@ public class AppointmentServiceTest {
 
         then(appointmentRepository)
                 .should()
-                .findByEmployeeAndDateTime(invalidAppointmentNotWorkingDay.getEmployee(), invalidAppointmentNotWorkingDay.getDateTime());
+                .findByEmployeeNameAndDateTime(invalidAppointmentNotWorkingDay.getEmployee().getName(), invalidAppointmentNotWorkingDay.getDateTime());
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(invalidAppointmentNotWorkingDay.getClient(), invalidAppointmentNotWorkingDay.getDateTime());
+                .findByClientNameAndDateTime(invalidAppointmentNotWorkingDay.getClient().getName(), invalidAppointmentNotWorkingDay.getDateTime());
 
         then(appointmentRepository)
                 .should()
@@ -254,51 +260,51 @@ public class AppointmentServiceTest {
     public void givenEmployeeObjectAndLocalDateTime_whenGetAppointmentByEmployeeAndDateTime_thenReturnAppointmentObject() {
         Appointment appointment = TestDataBuilder.buildValidAppointment1();
 
-        given(appointmentRepository.findByEmployeeAndDateTime(appointment.getEmployee(),appointment.getDateTime()))
+        given(appointmentRepository.findByEmployeeNameAndDateTime(appointment.getEmployee().getName(),appointment.getDateTime()))
                 .willReturn(Optional.of(appointment));
 
         AtomicReference<Appointment> foundAppointment = new AtomicReference<>();
-        Assertions.assertDoesNotThrow(() -> foundAppointment.set(appointmentService.getAppointmentByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime())));
+        Assertions.assertDoesNotThrow(() -> foundAppointment.set(appointmentService.getAppointmentByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime())));
 
         Assertions.assertEquals(foundAppointment.get(), appointment);
 
         then(appointmentRepository)
                 .should()
-                .findByEmployeeAndDateTime(appointment.getEmployee(), appointment.getDateTime());
+                .findByEmployeeNameAndDateTime(appointment.getEmployee().getName(), appointment.getDateTime());
     }
 
     @Test
     public void givenClientObjectAndLocalDateTime_whenGetAppointmentByClientAndDateTime_thenReturnAppointmentObject() {
         Appointment appointment = TestDataBuilder.buildValidAppointment1();
 
-        given(appointmentRepository.findByClientAndDateTime(appointment.getClient(),appointment.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(appointment.getClient().getName(),appointment.getDateTime()))
                 .willReturn(Optional.of(appointment));
 
         AtomicReference<Appointment> foundAppointment = new AtomicReference<>();
-        Assertions.assertDoesNotThrow(() -> foundAppointment.set(appointmentService.getAppointmentByClientAndDateTime(appointment.getClient(), appointment.getDateTime())));
+        Assertions.assertDoesNotThrow(() -> foundAppointment.set(appointmentService.getAppointmentByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime())));
 
         Assertions.assertEquals(foundAppointment.get(), appointment);
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(appointment.getClient(), appointment.getDateTime());
+                .findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime());
     }
 
     @Test
     public void givenNotExistingClientObjectAndLocalDateTime_whenGetAppointmentByClientAndDateTime_thenThrowException() {
         Appointment appointment = TestDataBuilder.buildValidAppointment1();
 
-        given(appointmentRepository.findByClientAndDateTime(appointment.getClient(),appointment.getDateTime()))
+        given(appointmentRepository.findByClientNameAndDateTime(appointment.getClient().getName(),appointment.getDateTime()))
                 .willReturn(Optional.empty());
 
         AtomicReference<Appointment> foundAppointment = new AtomicReference<>();
-        Assertions.assertThrows(AppointmentNotFoundException.class, () -> foundAppointment.set(appointmentService.getAppointmentByClientAndDateTime(appointment.getClient(), appointment.getDateTime())));
+        Assertions.assertThrows(AppointmentNotFoundException.class, () -> foundAppointment.set(appointmentService.getAppointmentByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime())));
 
         Assertions.assertNull(foundAppointment.get());
 
         then(appointmentRepository)
                 .should()
-                .findByClientAndDateTime(appointment.getClient(), appointment.getDateTime());
+                .findByClientNameAndDateTime(appointment.getClient().getName(), appointment.getDateTime());
     }
 
     @Test
@@ -310,17 +316,17 @@ public class AppointmentServiceTest {
         expected.add(appointment1);
         expected.add(appointment2);
 
-        given(appointmentRepository.findAllByEmployee(appointment1.getEmployee()))
+        given(appointmentRepository.findAllByEmployeeId(appointment1.getEmployee().getId()))
                 .willReturn(List.of(appointment1, appointment2));
 
         AtomicReference<List<Appointment>> foundAppointments = new AtomicReference<>();
-        Assertions.assertDoesNotThrow(() -> foundAppointments.set(appointmentService.getAllAppointmentsByEmployee(appointment1.getEmployee())));
+        Assertions.assertDoesNotThrow(() -> foundAppointments.set(appointmentService.getAllAppointmentsByEmployeeId(appointment1.getEmployee().getId())));
 
         Assertions.assertEquals(expected, foundAppointments.get());
 
         then(appointmentRepository)
                 .should()
-                .findAllByEmployee(appointment1.getEmployee());
+                .findAllByEmployeeId(appointment1.getEmployee().getId());
     }
 
     @Test
@@ -332,17 +338,17 @@ public class AppointmentServiceTest {
         expected.add(appointment1);
         expected.add(appointment2);
 
-        given(appointmentRepository.findAllByClient(appointment1.getClient()))
+        given(appointmentRepository.findAllByClientId(appointment1.getClient().getId()))
                 .willReturn(List.of(appointment1, appointment2));
 
         AtomicReference<List<Appointment>> foundAppointments = new AtomicReference<>();
-        Assertions.assertDoesNotThrow(() -> foundAppointments.set(appointmentService.getAllAppointmentsByClient(appointment1.getClient())));
+        Assertions.assertDoesNotThrow(() -> foundAppointments.set(appointmentService.getAllAppointmentsByClientId(appointment1.getClient().getId())));
 
         Assertions.assertEquals(expected, foundAppointments.get());
 
         then(appointmentRepository)
                 .should()
-                .findAllByClient(appointment1.getClient());
+                .findAllByClientId(appointment1.getClient().getId());
     }
 
     @Test

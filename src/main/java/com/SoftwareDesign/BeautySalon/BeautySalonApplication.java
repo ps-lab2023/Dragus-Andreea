@@ -61,7 +61,13 @@ public class BeautySalonApplication {
 		   Appointment updatedAppointment = appointmentService.updateAppointment(appointmentToBeUpdated);
 
 		   //clientService.deleteClientById(updatedClient.getId());
+
 		    */
+
+
+
+
+			/*
 			BeautyService beauty = new BeautyService("abc", new BigDecimal(120));
 			BeautyService beautyService = beautyServiceRepository.save(beauty);
 
@@ -99,6 +105,55 @@ public class BeautySalonApplication {
 			appointment2.addBeautyService(beautyService);
 
 			appointmentService.addAppointment(appointment2);
+            */
+
+
+
+
+			User user = new User("Andreea Dragus", UserType.EMPLOYEE, "andreeadragus", "employee1");
+			userService.addUser(user);
+
+			Employee employee = new Employee("Anca Chetan", UserType.EMPLOYEE, "ancachetan", "employee2", EmployeeType.NAIL_TECH);
+			Employee savedEmployee = employeeService.addEmployee(employee);
+
+			Client client = new Client("Alexandra Dumitru", "alexandradumitru", "client1", 0);
+			Client savedClient = clientService.addClient(client);
+
+			BeautyService beautyService1 = new BeautyService("Simple gel nails",new BigDecimal(120), EmployeeType.NAIL_TECH);
+			BeautyService beautyServiceSaved1 = beautyServiceRepository.save(beautyService1);
+
+			BeautyService beautyService2 = new BeautyService("Slim gel nails", new BigDecimal(250), EmployeeType.NAIL_TECH);
+			BeautyService beautyServiceSaved2 = beautyServiceRepository.save(beautyService2);
+
+			LocalDateTime localDateTime = LocalDateTime.of(2023, Month.AUGUST, 1, 10,0);
+			Appointment appointment = new Appointment(savedClient, savedEmployee, localDateTime);
+			appointment.addBeautyService(beautyServiceSaved1);
+			appointment.addBeautyService(beautyServiceSaved2);
+	        Appointment savedAppointment = appointmentService.addAppointment(appointment);
+
+
+			Employee employee2 = new Employee("Mary Jane", UserType.EMPLOYEE, "maryjane", "employee3", EmployeeType.HAIR_DRESSER);
+			Employee savedEmployee2 = employeeService.addEmployee(employee2);
+
+
+			Client client2 = new Client("Dora Johnes","dorajohnes", "client3", 0);
+            Client savedClient2 = clientService.addClient(client2);
+
+			LocalDateTime localDateTime2 = LocalDateTime.of(2023, Month.JUNE, 1, 14,0);
+			Appointment appointment2 = new Appointment(savedClient2, savedEmployee, localDateTime2);
+			appointment2.addBeautyService(beautyServiceSaved1);
+			appointment2.addBeautyService(beautyServiceSaved2);
+			Appointment savedAppointment2 = appointmentService.addAppointment(appointment2);
+
+			LocalDateTime localDateTime3 = LocalDateTime.of(2023, Month.JULY, 1, 16,0);
+			Appointment appointment3 = new Appointment(savedClient, savedEmployee2, localDateTime2);
+			appointment3.addBeautyService(beautyServiceSaved1);
+			Appointment savedAppointment3 = appointmentService.addAppointment(appointment3);
+
+            User admin = new User("Administrator", UserType.ADMIN, "administrator", "admin1");
+			User savedAdmin = userService.addUser(admin);
+
+
 
 			//employeeService.deleteEmployeeById(savedE.getId());
 			//clientService.deleteClientById(savedClient2.getId());

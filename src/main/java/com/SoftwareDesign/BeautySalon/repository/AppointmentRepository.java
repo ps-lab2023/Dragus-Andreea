@@ -17,10 +17,10 @@ import java.util.Optional;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long>, CustomAppointmentRepository {
     List<Appointment> findAll();
     Optional<Appointment> findById(Long id);
-    Optional<Appointment> findByEmployeeAndDateTime(Employee employee, LocalDateTime dateTime);
-    Optional<Appointment> findByClientAndDateTime(Client client, LocalDateTime dateTime);
-    List<Appointment> findAllByEmployee(Employee employee);
-    List<Appointment> findAllByClient(Client client);
+    Optional<Appointment> findByEmployeeNameAndDateTime(String name, LocalDateTime dateTime);
+    Optional<Appointment> findByClientNameAndDateTime(String name, LocalDateTime dateTime);
+    List<Appointment> findAllByEmployeeId(Long id);
+    List<Appointment> findAllByClientId(Long id);
     List<Appointment> findAllByBeautyServicesContaining(BeautyService beautyService);
     List<Appointment> findAllByTotalPriceGreaterThan(BigDecimal totalPrice);
     void deleteById(Long id);

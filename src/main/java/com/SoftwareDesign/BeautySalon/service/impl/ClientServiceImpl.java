@@ -20,13 +20,12 @@ public class ClientServiceImpl implements ClientService {
     private ClientRepository clientRepository;
     @Autowired
     private UserService userService;
-    @Autowired
-    private AppointmentService appointmentService;
 
-    public ClientServiceImpl(ClientRepository clientRepository, UserService userService, AppointmentService appointmentService) {
+
+    public ClientServiceImpl(ClientRepository clientRepository, UserService userService) {
         this.clientRepository = clientRepository;
         this.userService = userService;
-        this.appointmentService = appointmentService;
+
     }
     @Override
     public Client addClient(Client client) throws InvalidClientException, DataBaseFailException, InvalidUserException {
@@ -99,19 +98,39 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public List<Client> getAllClients() throws ClientNotFoundException {
+        List<Client> clientsOptional = this.clientRepository.findAll();
+        if(!CollectionUtils.isEmpty(clientsOptional)) {
+            return clientsOptional;
+        } else {
+            throw new ClientNotFoundException("Clients not found");
+        }
+    }
+
+    @Override
     public Client updateClient(Client client) throws UserNotFoundException, DataBaseFailException, InvalidUserException, InvalidClientException, ClientNotFoundException {
-        User user = userService.updateUser(new User(client.getId(), client.getName(), UserType.CLIENT, client.getUserName(), client.getPassword()));
+        int loyaltyPoints = 0;
+        User user = userService.updateUser(new User(client.getId(), client.getName(), UserType.CLIENT, client.getUserName(), client.getPassword(), client.isLoggedIn()));
         Optional<Client> client1 = clientRepository.findById(client.getId());
         if(client1.isPresent()) {
-            Client updatedClient = new Client(client.getId(), user.getName(), user.getUserName(), user.getPassword(), client1.get().getLoyaltyPoints());
-            List<Appointment> appointments = appointmentService.getAllAppointmentsByClient(client1.get());
-            updatedClient.setAppointments(appointments);
-
+            if(client.getLoyaltyPoints() >= 0 || client.getLoyaltyPoints() <= 1000) {
+                loyaltyPoints = client.getLoyaltyPoints();
+            } else {
+                loyaltyPoints = client1.get().getLoyaltyPoints();
+            }
+            Client updatedClient = new Client(client.getId(), user.getName(), user.getUserName(), user.getPassword(), loyaltyPoints);
+            updatedClient.setSalesCode(client.getSalesCode());
+            /*
             if(client.getAppointments() !=  null) {
+                List<Appointment> appointments = appointmentService.getAllAppointmentsByClient(client1.get());
+                updatedClient.setAppointments(appointments);
                 for(Appointment appointment: client.getAppointments()) {
                     updatedClient.addAppointment(appointment);
                 }
+
             }
+            */
+            updatedClient.setLoggedIn(client.isLoggedIn());
             Optional<Client> clientOptional = this.clientRepository.saveIfValid(updatedClient);
 
             if(clientOptional.isPresent()) {
@@ -128,15 +147,6 @@ public class ClientServiceImpl implements ClientService {
     public void deleteClientById(Long id) throws ClientNotFoundException, UserNotFoundException, AppointmentNotFoundException, EmployeeNotFoundException {
         Optional<Client> clientOptional = clientRepository.findById(id);
         if (clientOptional.isPresent()) {
-            /*
-            try {
-                List<Appointment> appointments = appointmentService.getAllAppointmentsByClient(clientOptional.get());
-                for(Appointment appointment:appointments) {
-                    appointmentService.deleteAppointmentById(appointment.getId());
-                }
-            } catch (AppointmentNotFoundException ignored) {
-
-            } */
             this.clientRepository.deleteById(id);
             this.userService.deleteUserById(id);
         } else {

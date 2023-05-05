@@ -51,15 +51,6 @@ public class CustomAppointmentRepositoryImpl implements CustomAppointmentReposit
                 if(client.isPresent() && employee.isPresent()) {
                     if(appointment.getId() == null) {
                         entityManager.persist(appointment);
-
-                        for(BeautyService beautyService: appointment.getBeautyServices()) {
-                            Optional<BeautyService> beautyServiceFound = beautyServiceRepository.findById(beautyService.getId());
-                            //if(beautyServiceFound.isPresent()) {
-                            //} else {
-                                //beautyServiceRepository.save(beautyService);
-                            //}
-
-                        }
                     } else {
                         entityManager.merge(appointment);
                     }

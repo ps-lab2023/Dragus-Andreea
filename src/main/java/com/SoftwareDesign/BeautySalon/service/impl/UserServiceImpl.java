@@ -16,6 +16,7 @@ import com.SoftwareDesign.BeautySalon.service.UserService;
 import com.SoftwareDesign.BeautySalon.service.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -25,6 +26,8 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -81,33 +84,50 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(User user) throws UserNotFoundException, InvalidUserException, DataBaseFailException {
-        Optional<User> userOptional = userRepository.findById(user.getId());
+    public User getUserByUserNameAndPassword(String username, String password) throws UserNotFoundException {
+        Optional<User> userOptional = this.userRepository.findByUserNameAndPassword(username, password);
         if(userOptional.isPresent()) {
-            User updatedUser = userOptional.get();
-
-            if(!user.getName().equals("") && user.getName() != null) {
-                updatedUser.setName(user.getName());
-            }
-
-            if(!user.getUserName().equals("") && user.getUserName() != null) {
-                updatedUser.setUserName(user.getUserName());
-            }
-
-            if(!user.getPassword().equals("") && user.getPassword() != null) {
-                updatedUser.setPassword(user.getPassword());
-            }
-
-            Optional<User> userOptionalUpdated = this.userRepository.saveIfValid(updatedUser);
-            if (userOptionalUpdated.isPresent()) {
-                return userOptionalUpdated.get();
-            } else {
-                throw new DataBaseFailException("Failed to load updated user in DB");
-            }
-
+            return userOptional.get();
         } else {
-            throw new UserNotFoundException("Could not update user because it was not found in DB");
+            throw new UserNotFoundException("User not found by username and password don't match" );
         }
+    }
+
+    @Override
+    public User updateUser(User user) throws UserNotFoundException, InvalidUserException, DataBaseFailException {
+        if(user.getId() != null) {
+            Optional<User> userOptional = userRepository.findById(user.getId());
+            if (userOptional.isPresent()) {
+                User updatedUser = userOptional.get();
+
+                if (!user.getName().equals("") && user.getName() != null) {
+                    updatedUser.setName(user.getName());
+                }
+
+                if (!user.getUserName().equals("") && user.getUserName() != null) {
+                    updatedUser.setUserName(user.getUserName());
+                }
+
+                if (!user.getPassword().equals("") && user.getPassword() != null) {
+                    if(user.getPassword().length() < 20) {
+                        updatedUser.setPassword(this.passwordEncoder.encode(user.getPassword()));
+                    }
+                }
+
+                updatedUser.setUserType(user.getUserType());
+                updatedUser.setLoggedIn(user.isLoggedIn());
+
+                Optional<User> userOptionalUpdated = this.userRepository.saveIfValid(updatedUser);
+                if (userOptionalUpdated.isPresent()) {
+                    return userOptionalUpdated.get();
+                } else {
+                    throw new DataBaseFailException("Failed to load updated user in DB");
+                }
+
+            } else {
+                throw new UserNotFoundException("Could not update user because it was not found in DB");
+            }
+        }  throw new DataBaseFailException("Please use a valid user id for update");
     }
 
     @Override
@@ -122,6 +142,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<User> getAllUsers() throws UserNotFoundException {
+        List<User> usersOptional = this.userRepository.findAll();
+        if(!CollectionUtils.isEmpty(usersOptional)) {
+            return usersOptional;
+        } else {
+            throw new UserNotFoundException("Users not found");
+        }
+    }
+
+    @Override
     public void deleteUserById(Long id) throws UserNotFoundException, ClientNotFoundException, EmployeeNotFoundException, AppointmentNotFoundException {
         Optional<User> userOptional = this.userRepository.findById(id);
         if(userOptional.isPresent()) {
@@ -129,7 +159,6 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UserNotFoundException("Could not delete user because it was not found in User DB");
         }
-
 
     }
 }

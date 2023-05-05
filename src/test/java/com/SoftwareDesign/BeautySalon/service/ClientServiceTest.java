@@ -270,7 +270,7 @@ public class ClientServiceTest {
             given(userService.updateUser(userToBeUpdated))
                     .willReturn(userToBeUpdated);
 
-            given(appointmentService.getAllAppointmentsByClient(savedClient))
+            given(appointmentService.getAllAppointmentsByClientId(savedClient.getId()))
                     .willReturn(savedClient.getAppointments());
 
             given(clientRepository.findById(savedClient.getId()))

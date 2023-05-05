@@ -35,7 +35,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
             } else {
                 entityManager.merge(user);
             }
-            User savedUser = new User(user.getId(), user.getName(), user.getUserType(), user.getUserName(), user.getPassword());
+            User savedUser = new User(user.getId(), user.getName(), user.getUserType(), user.getUserName(), user.getPassword(), user.isLoggedIn());
 
             return Optional.ofNullable(savedUser);
         } else {

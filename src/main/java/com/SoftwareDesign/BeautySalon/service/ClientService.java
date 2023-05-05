@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface ClientService {
     Client addClient(Client client) throws InvalidClientException, DataBaseFailException, InvalidUserException;
 
@@ -23,6 +22,7 @@ public interface ClientService {
 
     List<Client> getAllClientsByLoyaltyPointsGreaterThan(int points) throws ClientNotFoundException;
 
+    List<Client> getAllClients() throws ClientNotFoundException;
     Client updateClient(Client client) throws UserNotFoundException, DataBaseFailException, InvalidUserException, InvalidClientException, ClientNotFoundException;
     void deleteClientById(Long id) throws ClientNotFoundException, UserNotFoundException, AppointmentNotFoundException, EmployeeNotFoundException;
 }

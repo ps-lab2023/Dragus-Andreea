@@ -17,7 +17,7 @@ public class ClientValidator extends UserValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         Client client = (Client) target;
-        super.validate(new User(client.getId(), client.getName(), client.getUserType(), client.getUserName(), client.getPassword()), errors);
+        super.validate(new User(client.getId(), client.getName(), client.getUserType(), client.getUserName(), client.getPassword(), client.isLoggedIn()), errors);
         if(!client.getUserType().equals(UserType.CLIENT)) {
             errors.rejectValue("userType", "userType.not.CLIENT");
         }
@@ -26,7 +26,7 @@ public class ClientValidator extends UserValidator implements Validator {
             errors.rejectValue("loyaltyPoints", "loyaltyPoints.negativeValue");
         }
 
-        if(client.getLoyaltyPoints() > 100) {
+        if(client.getLoyaltyPoints() > 10000) {
             errors.rejectValue("loyaltyPoints", "loyaltyPoints.invalidValue");
         }
 

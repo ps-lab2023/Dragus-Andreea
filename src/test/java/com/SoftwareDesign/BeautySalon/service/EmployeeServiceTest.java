@@ -287,7 +287,7 @@ public class EmployeeServiceTest {
             given(userService.updateUser(userToBeUpdated))
                     .willReturn(userToBeUpdated);
 
-            given(appointmentService.getAllAppointmentsByEmployee(savedEmployee))
+            given(appointmentService.getAllAppointmentsByEmployeeId(savedEmployee.getId()))
                     .willReturn(savedEmployee.getAppointments());
 
             given(employeeRepository.findById(savedEmployee.getId()))

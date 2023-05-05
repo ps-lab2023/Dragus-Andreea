@@ -38,7 +38,7 @@ public class Appointment {
     @ToString.Exclude
     private List<BeautyService> beautyServices;
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalPrice = new BigDecimal(0);
 
     public Appointment(Long id, Client client, Employee employee, LocalDateTime dateTime) {
         this.id = id;
@@ -66,5 +66,10 @@ public class Appointment {
     public void addBeautyService(BeautyService beautyService) {
         beautyServices.add(beautyService);
         totalPrice = totalPrice.add(beautyService.getPrice());
+    }
+
+    public void setBeautyServices(List<BeautyService> beautyServices) {
+        totalPrice = new BigDecimal(0);
+        this.beautyServices = beautyServices;
     }
 }

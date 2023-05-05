@@ -16,14 +16,9 @@ public class EmployeeValidator extends UserValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         Employee employee = (Employee) target;
-        super.validate(new User(employee.getId(), employee.getName(), employee.getUserType(), employee.getUserName(), employee.getPassword()), errors);
+        super.validate(new User(employee.getId(), employee.getName(), employee.getUserType(), employee.getUserName(), employee.getPassword(), employee.isLoggedIn()), errors);
         if(!employee.getUserType().equals(UserType.EMPLOYEE)) {
             errors.rejectValue("userType", "userType.not.EMPLOYEE");
-        }
-
-        if(employee.getAppointments() == null)
-        {
-            errors.rejectValue("appointments","appointments.null");
         }
 
 

@@ -104,16 +104,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public List<Employee> getAllEmployees() throws EmployeeNotFoundException {
+        List<Employee> employeesOptional = this.employeeRepository.findAll();
+
+        if(!CollectionUtils.isEmpty(employeesOptional)) {
+            return employeesOptional;
+        } else {
+            throw new EmployeeNotFoundException("Employees not found ");
+        }
+    }
+
+    @Override
     public Employee updateEmployee(Employee employee) throws UserNotFoundException, DataBaseFailException, InvalidUserException, EmployeeNotFoundException, InvalidEmployeeException {
-        User user = userService.updateUser(new User(employee.getId(), employee.getName(), UserType.EMPLOYEE, employee.getUserName(), employee.getPassword()));
+        User user = userService.updateUser(new User(employee.getId(), employee.getName(), UserType.EMPLOYEE, employee.getUserName(), employee.getPassword(), employee.isLoggedIn()));
         Optional<Employee> employee1 = employeeRepository.findById(employee.getId());
         if(employee1.isPresent()) {
 
             Employee updatedEmployee = new Employee(employee.getId(), user.getName(), UserType.EMPLOYEE, user.getUserName(), user.getPassword(), employee1.get().getEmployeeType());
-            List<Appointment> appointments = appointmentService.getAllAppointmentsByEmployee(employee1.get());
-            updatedEmployee.setAppointments(appointments);
 
-            if(employee.getAppointments() != null) {
+            if(employee.getAppointments() != null && employee.getAppointments().size() > 0) {
+                List<Appointment> appointments = appointmentService.getAllAppointmentsByEmployeeId(employee1.get().getId());
+                updatedEmployee.setAppointments(appointments);
                 for(Appointment appointment: employee.getAppointments()) {
                     updatedEmployee.addAppointment(appointment);
                 }
@@ -123,6 +134,7 @@ public class EmployeeServiceImpl implements EmployeeService {
              updatedEmployee.setEmployeeType(employee.getEmployeeType());
             }
 
+            updatedEmployee.setLoggedIn(employee.isLoggedIn());
             Optional<Employee> employeeOptional = this.employeeRepository.saveIfValid(updatedEmployee);
 
             if (employeeOptional.isPresent()) {
@@ -140,17 +152,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void deleteEmployeeById(Long id) throws EmployeeNotFoundException, UserNotFoundException, ClientNotFoundException, AppointmentNotFoundException {
         Optional<Employee> employeeOptional = employeeRepository.findById(id);
         if (employeeOptional.isPresent()) {
-            /*
-            List<Appointment> appointments;
-            try {
-                appointments = appointmentService.getAllAppointmentsByEmployee(employeeOptional.get());
-                for(Appointment appointment:appointments) {
-                    System.out.println("/////" + appointment);
-                    appointmentService.deleteAppointmentById(appointment.getId());
-                }
-            } catch (AppointmentNotFoundException ignored) {
-            }
-            */
             this.employeeRepository.deleteById(id);
             this.userService.deleteUserById(id);
         } else {
